@@ -9,12 +9,6 @@ from datetime import date, timedelta
 from alpha_vantage.fundamentaldata import FundamentalData
 from stocknews import StockNews
 
-load_dotenv()
-
-default_ticker = "AAPL"
-default_start = date.today() - timedelta(days=30)
-default_end = date.today() - timedelta(days=1)
-
 st.set_page_config(page_title="Stock Dashboard", icon = "📊", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(
     """
@@ -24,6 +18,11 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+load_dotenv()
+
+default_ticker = "AAPL"
+default_start = date.today() - timedelta(days=30)
+default_end = date.today() - timedelta(days=1)
 
 st.title("📊 Stock Dashboard")
 
