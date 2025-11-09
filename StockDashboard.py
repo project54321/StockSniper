@@ -9,7 +9,7 @@ from datetime import date, timedelta
 from alpha_vantage.fundamentaldata import FundamentalData
 from stocknews import StockNews
 
-st.set_page_config(page_title="Stock Dashboard", icon = "📊", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Stock Dashboard", layout="wide", initial_sidebar_state="collapsed")
 #st.markdown(
     #"""
     #<link rel="manifest" href="site.webmanifest">
