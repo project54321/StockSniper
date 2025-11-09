@@ -15,11 +15,18 @@ default_ticker = "AAPL"
 default_start = date.today() - timedelta(days=30)
 default_end = date.today() - timedelta(days=1)
 
+st.set_page_config(page_title="Stock Dashboard", layout="wide", initial_sidebar_state="collapsed")
+
 st.title("📊 Stock Dashboard")
 
-ticker = st.sidebar.text_input("Ticker", value=default_ticker)
-start_date = st.sidebar.date_input("Start Date", value=default_start)
-end_date = st.sidebar.date_input("End Date", value=default_end)
+col1, col2, col3 = st.columns([2, 2, 3])
+
+with col1:
+    ticker = st.text_input("Ticker", value=default_ticker)
+with col2:
+    start_date = st.date_input("Start Date", value=default_start)
+with col3:
+    end_date = st.date_input("End Date", value=default_end)
 
 data = pd.DataFrame()
 if ticker:
@@ -28,11 +35,7 @@ if ticker:
 if isinstance(data.columns, pd.MultiIndex):
     data.columns = [f"{col[0]} {col[1]}" for col in data.columns]
 
-close_col = None
-for col in data.columns:
-    if "Close" in col:
-        close_col = col
-        break
+close_col = next((col for col in data.columns if "Close" in col), None)
 
 st.subheader("Raw Data")
 st.write(f"Rows: {len(data)}, Columns: {list(data.columns)}")
@@ -42,8 +45,8 @@ else:
     st.info("No pricing data available for this ticker/date range.")
 
 if close_col and not data.empty:
-    fig = px.line(data, x=data.index, y=close_col, title=f"{ticker} Close Price")
-    st.plotly_chart(fig)
+    fig = px.line(data, x=data.index, y=close_col, title=f"{ticker} Close Price", template="plotly_dark")
+    st.plotly_chart(fig, use_container_width=True)
 else:
     st.warning("No Close price column found for plotting.")
 
@@ -55,18 +58,18 @@ with pricing_data:
         df2 = data.copy()
         df2["% Change"] = df2[close_col].pct_change()
         df2.dropna(inplace=True)
-        st.write(df2)
 
+        with st.expander("View Detailed Price Data"):
+            st.write(df2)
+
+        col_a, col_b, col_c = st.columns(3)
         annual_return = df2["% Change"].mean() * 252 * 100
-        st.write(f"Annual Return: {annual_return:.2f}%")
-
         stdev = np.std(df2["% Change"]) * np.sqrt(252)
-        st.write(f"Standard Deviation: {stdev*100:.2f}%")
+        risk_adj = annual_return / (stdev*100) if stdev > 0 else None
 
-        if stdev > 0:
-            st.write(f"Risk-Adjusted Return: {annual_return / (stdev*100):.2f}")
-        else:
-            st.write("Risk-Adjusted Return: N/A (zero volatility)")
+        col_a.metric("Annual Return", f"{annual_return:.2f}%")
+        col_b.metric("Volatility", f"{stdev*100:.2f}%")
+        col_c.metric("Risk-Adjusted Return", f"{risk_adj:.2f}" if risk_adj else "N/A")
     else:
         st.info("No pricing data to display here.")
 
@@ -79,8 +82,8 @@ with fundamental_data:
         balance_sheet = fd.get_balance_sheet_annual(ticker)[0]
         bs = balance_sheet.T[2:]
         bs.columns = list(balance_sheet.T.iloc[0])
-        st.subheader("Balance Sheet")
-        st.write(bs)
+        with st.expander("Balance Sheet"):
+            st.write(bs)
     except Exception as e:
         st.warning(f"Could not load balance sheet: {e}")
 
@@ -88,8 +91,8 @@ with fundamental_data:
         income_statement = fd.get_income_statement_annual(ticker)[0]
         is1 = income_statement.T[2:]
         is1.columns = list(income_statement.T.iloc[0])
-        st.subheader("Income Statement")
-        st.write(is1)
+        with st.expander("Income Statement"):
+            st.write(is1)
     except Exception as e:
         st.warning(f"Could not load income statement: {e}")
 
@@ -97,8 +100,8 @@ with fundamental_data:
         cash_flow = fd.get_cash_flow_annual(ticker)[0]
         cf = cash_flow.T[2:]
         cf.columns = list(cash_flow.T.iloc[0])
-        st.subheader("Cash Flow Statement")
-        st.write(cf)
+        with st.expander("Cash Flow Statement"):
+            st.write(cf)
     except Exception as e:
         st.warning(f"Could not load cash flow: {e}")
 
@@ -108,11 +111,20 @@ with news:
         sn = StockNews(ticker, save_news=False)
         df_news = sn.read_rss()
         for i in range(min(10, len(df_news))):
-            st.subheader(f"News {i+1}")
-            st.write(df_news["published"][i])
-            st.write(df_news["title"][i])
-            st.write(df_news["summary"][i])
-            st.write(f"Title Sentiment: {df_news['sentiment_title'][i]}")
-            st.write(f"News Sentiment: {df_news['sentiment_summary'][i]}")
+            with st.expander(f"News {i+1}: {df_news['title'][i]}"):
+                st.write(df_news["published"][i])
+                st.write(df_news["summary"][i])
+                st.write(f"Title Sentiment: {df_news['sentiment_title'][i]}")
+                st.write(f"News Sentiment: {df_news['sentiment_summary'][i]}")
     except Exception as e:
         st.warning(f"Could not load news: {e}")
+
+st.markdown(
+    """
+    <hr>
+    <p style='text-align:center; font-size:14px; color:gray;'>
+    Made by Arjun Averineni | <a href="https://github.com/project54321" target="_blank">GitHub</a>
+    </p>
+    """,
+    unsafe_allow_html=True
+)
