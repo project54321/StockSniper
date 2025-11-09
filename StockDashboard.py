@@ -10,13 +10,13 @@ from alpha_vantage.fundamentaldata import FundamentalData
 from stocknews import StockNews
 
 st.set_page_config(page_title="Stock Dashboard", icon = "📊", layout="wide", initial_sidebar_state="collapsed")
-st.markdown(
-    """
-    <link rel="manifest" href="site.webmanifest">
-    <link rel="icon" type="image/png" href="static/android-chrome-192x192.png">
-    """,
-    unsafe_allow_html=True
-)
+#st.markdown(
+    #"""
+    #<link rel="manifest" href="site.webmanifest">
+    #<link rel="icon" type="image/png" href="static/android-chrome-192x192.png">
+    #""",
+    #unsafe_allow_html=True
+#)
 
 load_dotenv()
 
